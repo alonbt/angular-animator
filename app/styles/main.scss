@@ -89,3 +89,29 @@ body {
     border-bottom: 0;
   }
 }
+
+.my-class-out {
+  display: none;
+
+}
+
+.my-class-between {
+  display: block;
+  background: transparent;
+  opacity: 0;
+  height: 0;
+  transition: all 2s linear;
+}
+
+.my-class-between-out {
+  transition: all .5s linear;
+}
+
+.my-class-in {
+  display: block;
+  opacity: 1;
+  height: 30px;
+  background: red;
+
+
+}

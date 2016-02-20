@@ -11,11 +11,11 @@ describe('Angular.element: Extend', function () {
 
   describe('when element.addAnimatorClassSequence', function () {
 
-    it('should call animatorClassManager', inject(function (animatorClassManager) {
-      animatorClassManager.runInSequence = jasmine.createSpy('addClass');
+    it('should call animatorSequence', inject(function (animatorSequence) {
+      animatorSequence.runInSequence = jasmine.createSpy('addClass');
       element = angular.element('<div></div>');
       element.addAnimatorClassSequence();
-      expect(animatorClassManager.runInSequence).toHaveBeenCalledWith(element);
+      expect(animatorSequence.runInSequence).toHaveBeenCalledWith(element);
     }));
 
   });

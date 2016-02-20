@@ -46,7 +46,7 @@ module.exports = function (grunt) {
         }
       },
       jsTest: {
-        files: ['test/spec/{,*/}*.js'],
+        files: ['test/spec/{,*/}*.js', 'app/scripts/{,*/}*.js'],
         tasks: ['newer:jshint:test', 'newer:jscs:test', 'karma']
       },
       compass: {
@@ -455,7 +455,7 @@ module.exports = function (grunt) {
     karma: {
       unit: {
         configFile: 'test/karma.conf.js',
-        singleRun: false
+        singleRun: true
       }
     }
   });
@@ -490,14 +490,6 @@ module.exports = function (grunt) {
     'karma'
   ]);
 
-  grunt.registerTask('test-single-run', function () {
-    var config = grunt.config('karma');
-    config.unit.singleRun = true;
-    grunt.config('karma', config);
-    grunt.task.run(['test']);
-  });
-
-
   grunt.registerTask('build', [
     'clean:dist',
     'wiredep',
@@ -508,7 +500,7 @@ module.exports = function (grunt) {
     'concat',
     'ngAnnotate',
     'copy:dist',
-    //'cdnify',
+    'cdnify',
     'cssmin',
     'uglify',
     'filerev',
@@ -519,7 +511,7 @@ module.exports = function (grunt) {
   grunt.registerTask('default', [
     'newer:jshint',
     'newer:jscs',
-    'test-single-run',
+    'test',
     'build'
   ]);
 };

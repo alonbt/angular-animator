@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('angularAnimator').run(function ($timeout, animatorClassManager) {
+angular.module('angularAnimator').run(function ($timeout, animatorSequence) {
   angular.element.prototype.addAnimatorClassSequence = function () {
-    animatorClassManager.runInSequence(this);
+    animatorSequence.runInSequence(this);
   };
 });

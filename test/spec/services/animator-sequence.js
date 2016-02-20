@@ -1,6 +1,6 @@
 'use strict';
 
-describe('Service: animatorClassManager', function () {
+describe('Service: animatorSequence', function () {
 
   // load the service's module
   var element;
@@ -8,9 +8,9 @@ describe('Service: animatorClassManager', function () {
 
 
   // instantiate service
-  var animatorClassManager;
-  beforeEach(inject(function (_animatorClassManager_) {
-    animatorClassManager = _animatorClassManager_;
+  var animatorSequence;
+  beforeEach(inject(function (_animatorSequence_) {
+    animatorSequence = _animatorSequence_;
   }));
 
   beforeEach(inject(function(animatorDuration) {
@@ -18,16 +18,16 @@ describe('Service: animatorClassManager', function () {
   }));
 
   it('should do something', function () {
-    expect(!!animatorClassManager).toBe(true);
+    expect(!!animatorSequence).toBe(true);
   });
 
   ['animator', 'my-class'].forEach(function (className) {
 
     describe('when class name is: ' + className, function () {
-      describe('when initInState', function () {
+      describe('when initState with true', function () {
         it('should have animator-in class', function () {
           createElement(1000);
-          initInState(className);
+          initState(true, className);
           expectToHaveClasses(className + '-in');
         });
       });
@@ -88,10 +88,10 @@ describe('Service: animatorClassManager', function () {
 
   ['animator', 'my-class'].forEach(function (className) {
     describe('when class name is: ' + className, function () {
-      describe('when initOutState', function () {
+      describe('when initState with false', function () {
         it('should have animator-in class', function () {
           createElement(1000);
-          initOutState(className);
+          initState(false, className);
           expectToHaveClasses(className + '-out');
         });
       });
@@ -167,34 +167,26 @@ describe('Service: animatorClassManager', function () {
   }
 
   function createElementWithDuration(duration, className) {
-    inject(function (animatorClassManager) {
+    inject(function (animatorSequence) {
       createElement(duration);
-      initOutState(className);
-      animatorClassManager.runInSequence(element);
+      initState(false, className);
+      animatorSequence.run(true, element);
     });
   }
 
   function createElementForRemoveWithDuration(duration, className) {
-    inject(function (animatorClassManager) {
+    inject(function (animatorSequence) {
       createElement(duration);
-      initInState(className);
-      animatorClassManager.runOutSequence(element);
+      initState(true, className);
+      animatorSequence.run(false);
     });
   }
 
-  function initInState(className) {
+  function initState(state, className) {
     if (className === 'animator') {
-      animatorClassManager.initInState(element);
+      animatorSequence.initState(state, element);
     } else {
-      animatorClassManager.initInState(element, className);
-    }
-  }
-
-  function initOutState(className) {
-    if (className === 'animator') {
-      animatorClassManager.initOutState(element);
-    } else {
-      animatorClassManager.initOutState(element, className);
+      animatorSequence.initState(state, element, className);
     }
   }
 
