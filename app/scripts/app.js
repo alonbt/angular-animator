@@ -8,8 +8,12 @@
  *
  * Main module of the application.
  */
+
+angular.module('angularAnimator', []);
+
 angular
   .module('angularAnimatorApp', [
+    'angularAnimator',
     'ngAnimate',
     'ngCookies',
     'ngResource',

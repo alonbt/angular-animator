@@ -472,15 +472,10 @@ module.exports = function (grunt) {
       'concurrent:server',
       'postcss:server',
       'connect:livereload',
-      'force:runKarma',
+      'force:karma',
       'watch'
     ]);
   });
-
-  grunt.registerTask('runKarma', function () {
-    grunt.task.run(['karma']);
-  });
-
 
   grunt.registerTask('server', 'DEPRECATED TASK. Use the "serve" task instead', function (target) {
     grunt.log.warn('The `server` task has been deprecated. Use `grunt serve` to start a server.');
@@ -494,6 +489,14 @@ module.exports = function (grunt) {
     'connect:test',
     'karma'
   ]);
+
+  grunt.registerTask('test-single-run', function () {
+    var config = grunt.config('karma');
+    config.unit.singleRun = true;
+    grunt.config('karma', config);
+    grunt.task.run(['test']);
+  });
+
 
   grunt.registerTask('build', [
     'clean:dist',
@@ -516,7 +519,7 @@ module.exports = function (grunt) {
   grunt.registerTask('default', [
     'newer:jshint',
     'newer:jscs',
-    'test',
+    'test-single-run',
     'build'
   ]);
 };
