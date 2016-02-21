@@ -10,25 +10,6 @@
 angular.module('angularAnimator')
   .service('animatorSequence', function (animatorDuration, animatorStatesMap, animatorClass, $timeout, animatorState, animatorClassName) {
 
-    var state;
-
-    function startSequence() {
-      animatorClass.addStateBetween(state);
-    }
-
-    function betweenSequence(callback) {
-      $timeout(function () {
-        animatorClass.addState(state);
-        animatorClass.removeOppositeState(state);
-        callback();
-      }, 0);
-    }
-
-    function endSequence() {
-      $timeout(function () {
-        animatorClass.removeStateBetween(state);
-      }, animatorDuration.get());
-    }
 
     function sequence() {
       startSequence();
@@ -37,20 +18,48 @@ angular.module('angularAnimator')
       });
     }
 
-    function setState(_state) {
-      state = _state;
+    function startSequence() {
+      animatorClass.addStateBetween();
+    }
+
+    function stopStartSequence() {
+      animatorClass.removeStateBetween();
+    }
+
+    function betweenSequence(callback) {
+      $timeout(function () {
+        animatorClass.addState();
+        animatorClass.removeOppositeState();
+        callback();
+      }, 0);
+    }
+
+    function endSequence() {
+      $timeout(function () {
+        animatorClass.removeStateBetween();
+      }, animatorDuration.get());
+    }
+
+    function initServices(element, className) {
+      animatorDuration.init(element);
+      animatorClassName.init(className);
+      animatorClass.init(element);
     }
 
     return {
       init: function(_state, element, className) {
-        setState(_state);
         animatorState.set(_state);
-        animatorDuration.init(element);
-        animatorClassName.init(className);
-        animatorClass.init(element);
+        initServices(element, className)
+
       },
       run: function(_state) {
-        setState(_state);
+        var inProgress = animatorState.getInProgress();
+        if (inProgress && inProgress === _state) {
+          return;
+        }
+        if (animatorState.getInProgress()) {
+          stopStartSequence();
+        }
         animatorState.set(_state);
         sequence();
       }

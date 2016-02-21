@@ -20,6 +20,10 @@ describe('Service: animatorState', function () {
     expect(animatorState.get()).toBe(animatorStatesMap.OUT);
   });
 
+  it('should have get OUT state by default', function () {
+    expect(animatorState.getInProgress()).toBe(undefined);
+  });
+
   describe('when set IN', function () {
 
     beforeEach(function () {
@@ -32,6 +36,27 @@ describe('Service: animatorState', function () {
 
     it('should get opposite state', function () {
       expect(animatorState.getOpposite()).toBe(animatorStatesMap.OUT);
+    });
+  });
+
+  describe('when setInProgress', function () {
+    beforeEach(function () {
+      animatorState.set(animatorStatesMap.IN, {inProgress: true});
+    });
+
+    it('should get inProgress', function () {
+      expect(animatorState.getInProgress()).toBe(animatorStatesMap.IN);
+    });
+
+    describe('when clearInProgress', function () {
+
+      beforeEach(function () {
+        animatorState.clearInProgress();
+      });
+
+      it('should get inProgress', function () {
+        expect(animatorState.getInProgress()).toBe(undefined);
+      });
     });
   });
 
