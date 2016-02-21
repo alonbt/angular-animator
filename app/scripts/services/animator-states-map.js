@@ -2,13 +2,13 @@
 
 /**
  * @ngdoc service
- * @name angularAnimatorApp.animatorStates
+ * @name angularAnimatorApp.animatorStatesMap
  * @description
- * # animatorStates
+ * # animatorStatesMap
  * Constant in the angularAnimatorApp.
  */
 angular.module('angularAnimator')
-  .constant('animatorStates', {
+  .constant('animatorStatesMap', {
     IN: 'in',
     OUT: 'out'
   });

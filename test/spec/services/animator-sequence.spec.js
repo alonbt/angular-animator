@@ -1,9 +1,8 @@
 'use strict';
 
 describe('Service: animatorSequence', function () {
-
   // load the service's module
-  var element;
+  var element, IN, OUT;
   beforeEach(module('angularAnimator'));
 
 
@@ -13,183 +12,77 @@ describe('Service: animatorSequence', function () {
     animatorSequence = _animatorSequence_;
   }));
 
-  beforeEach(inject(function(animatorDuration, animatorClass) {
-    animatorClass.init = jasmine.createSpy('init');
-    animatorDuration.get = jasmine.createSpy('get');
+  beforeEach(inject(function(animatorDuration, animatorStatesMap, animatorState) {
+    IN = animatorStatesMap.IN;
+    OUT = animatorStatesMap.OUT;
+    spyOn(animatorDuration, 'get');
+    spyOn(animatorDuration, 'init');
+    spyOn(animatorState, 'set');
   }));
 
   it('should do something', function () {
     expect(!!animatorSequence).toBe(true);
   });
 
-  ['animator', 'my-class'].forEach(function (className) {
+  describe('init with OUT', function () {
 
-    describe('when class name is: ' + className, function () {
-      describe('when initState with true', function () {
-        it('should have animator-in class', function () {
-          createElement(1000);
-          initState(true, className);
-          //expect(animatorClass.init).toHaveBeenCalledWith(element, className);
-          expectToHaveClasses(className + '-in');
-        });
-      });
-
-      describe('when runInSequence: ', function () {
-
-        describe('when transition with 1 second', function () {
-          beforeEach(function () {
-            createElementWithDuration(1000, className);
-          });
-
-          describe('start', function () {
-
-            it('should manage classes', function () {
-              expectToHaveClasses([className + '-between', className + '-between-in', className + '-out']);
-              expectNotToHaveClasses(className + '-in');
-            });
-
-          });
-
-          describe('between', function () {
-
-            beforeEach(inject(function($timeout) {
-              $timeout.flush(0);
-            }));
-
-            it('should call animationDuration.get with element', inject(function (animatorDuration) {
-              expect(animatorDuration.get).toHaveBeenCalledWith(element);
-            }));
-
-            it('should manage classes', function () {
-              expectToHaveClasses([className + '-between', className + '-between-in', className + '-in']);
-              expectNotToHaveClasses(className + '-out');
-            });
-
-            describe('end', function () {
-              beforeEach(inject(function($timeout) {
-                $timeout.flush(1000);
-              }));
-
-              it('should manage classes', function () {
-                expectToHaveClasses(className + '-in');
-                expectNotToHaveClasses([className + '-between-in', className + '-between', className + '-out']);
-              });
-            });
-
-          });
-
-        });
-
-      });
-
-
-    });
-
-
-  });
-
-  ['animator', 'my-class'].forEach(function (className) {
-    describe('when class name is: ' + className, function () {
-      describe('when initState with false', function () {
-        it('should have animator-in class', function () {
-          createElement(1000);
-          initState(false, className);
-          expectToHaveClasses(className + '-out');
-        });
-      });
-
-      describe('when runOutSequence', function () {
-
-        describe('when transition with 1 second', function () {
-          beforeEach(function () {
-            createElementForRemoveWithDuration(1000, className);
-          });
-
-          describe('start', function () {
-
-            it('should manage classes', function () {
-              expectToHaveClasses([className + '-between', className + '-between-out', className + '-in']);
-              expectNotToHaveClasses(className + '-out');
-            });
-
-          });
-
-          describe('between', function () {
-
-            beforeEach(inject(function($timeout) {
-              $timeout.flush(0);
-            }));
-
-            it('should manage classes', function () {
-              expectToHaveClasses([className + '-between', className + '-between-out', className + '-out']);
-              expectNotToHaveClasses(className + '-in');
-            });
-
-            describe('end', function () {
-              beforeEach(inject(function($timeout) {
-                $timeout.flush(1000);
-              }));
-
-              it('should manage classes', function () {
-                expectNotToHaveClasses([className + '-in', className + '-between-in', className + '-between']);
-                expectToHaveClasses(className + '-out');
-              });
-            });
-          });
-        });
-
-
-      });
-
-
-    });
-  });
-
-  function makeArray(strOrArr) {
-    return typeof strOrArr === 'string' ? strOrArr.split() : strOrArr;
-  }
-
-  function expectToHaveClasses(classArray) {
-    makeArray(classArray).forEach(function(className) {
-      expect(element).toHaveClass(className);
-    });
-  }
-
-  function expectNotToHaveClasses(classArray) {
-    makeArray(classArray).forEach(function(className) {
-      expect(element).not.toHaveClass(className);
-    });
-  }
-
-  function createElement(duration) {
-    inject(function (animatorDuration) {
+    var className;
+    beforeEach(inject(function (animatorClass, animatorClassName) {
       element = angular.element('<div></div>');
-      animatorDuration.get.and.returnValue(duration);
+      className = 'new-class-name';
+      spyOnAnimatorClass(animatorClass);
+      spyOn(animatorClassName, 'init');
+      animatorSequence.init(OUT, element, className);
+    }));
+
+    it('should init animatorClass', inject(function (animatorClass) {
+      expect(animatorClass.init).toHaveBeenCalledWith(element);
+    }));
+
+    it('should init animatorClassName', inject(function (animatorClassName) {
+      expect(animatorClassName.init).toHaveBeenCalledWith(className);
+    }));
+
+    it('should set animatorState', inject(function (animatorState) {
+      expect(animatorState.set).toHaveBeenCalledWith(OUT);
+    }));
+
+    it('should init animatorDuration with element', inject(function (animatorDuration) {
+      expect(animatorDuration.init).toHaveBeenCalledWith(element);
+    }));
+
+    describe('run IN sequence', function () {
+      beforeEach(inject(function (animatorState) {
+        animatorState.set.calls.reset();
+        animatorSequence.run(IN);
+      }));
+
+      it('should set animatorState', inject(function (animatorState) {
+        expect(animatorState.set).toHaveBeenCalledWith(IN);
+      }));
+
+      it('should add classes according to sequence', inject(function (animatorClass, $timeout, animatorDuration) {
+        var animationDuration = 1000;
+        animatorDuration.get.and.returnValue(animationDuration);
+        expect(animatorClass.addStateBetween).toHaveBeenCalledWith(IN);
+
+        $timeout.flush(0);
+        expect(animatorClass.addState).toHaveBeenCalledWith(IN);
+        expect(animatorClass.removeOppositeState).toHaveBeenCalledWith(IN);
+        expect(animatorDuration.get).toHaveBeenCalledWith();
+
+        $timeout.flush(animationDuration);
+        expect(animatorClass.removeStateBetween).toHaveBeenCalledWith(IN);
+
+      }));
     });
-  }
+  });
 
-  function createElementWithDuration(duration, className) {
-    inject(function (animatorSequence) {
-      createElement(duration);
-      initState(false, className);
-      animatorSequence.run(true, element);
-    });
+  function spyOnAnimatorClass(animatorClass) {
+    spyOn(animatorClass, 'init');
+    spyOn(animatorClass, 'addStateBetween');
+    spyOn(animatorClass, 'removeStateBetween');
+    spyOn(animatorClass, 'addState');
+    spyOn(animatorClass, 'removeOppositeState');
   }
-
-  function createElementForRemoveWithDuration(duration, className) {
-    inject(function (animatorSequence) {
-      createElement(duration);
-      initState(true, className);
-      animatorSequence.run(false);
-    });
-  }
-
-  function initState(state, className) {
-    if (className === 'animator') {
-      animatorSequence.initState(state, element);
-    } else {
-      animatorSequence.initState(state, element, className);
-    }
-  }
-
 });

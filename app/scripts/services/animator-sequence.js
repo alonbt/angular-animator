@@ -8,51 +8,26 @@
  * Service in the angularAnimatorApp.
  */
 angular.module('angularAnimator')
-  .service('animatorSequence', function (animatorDuration, animatorStates, animatorClass, $timeout) {
+  .service('animatorSequence', function (animatorDuration, animatorStatesMap, animatorClass, $timeout, animatorState, animatorClassName) {
 
-    var element, currentState, className;
-
-    var DEFAULT_NAME = 'animator';
-
-    function removeBetweenClasses() {
-      element.removeClass(className + '-between');
-      element.removeClass(className + '-between-' + currentState);
-    }
-
-    function addBetweenClasses() {
-      element.addClass(className + '-between');
-      element.addClass(className + '-between-' + currentState);
-    }
-
-    function addClassWithState() {
-      element.addClass(className + '-' + currentState);
-    }
-
-    function removeClassWithOppositeState() {
-      element.removeClass(className + '-' + getOppositeState(currentState));
-    }
-
-    function getOppositeState(state) {
-      return state === animatorStates.IN ? animatorStates.OUT : animatorStates.IN;
-    }
-
+    var state;
 
     function startSequence() {
-      addBetweenClasses();
+      animatorClass.addStateBetween(state);
     }
 
     function betweenSequence(callback) {
       $timeout(function () {
-        addClassWithState();
-        removeClassWithOppositeState();
+        animatorClass.addState(state);
+        animatorClass.removeOppositeState(state);
         callback();
       }, 0);
     }
 
     function endSequence() {
       $timeout(function () {
-        removeBetweenClasses();
-      }, animatorDuration.get(element));
+        animatorClass.removeStateBetween(state);
+      }, animatorDuration.get());
     }
 
     function sequence() {
@@ -62,32 +37,21 @@ angular.module('angularAnimator')
       });
     }
 
-    function setParams(isInState, _element, _className) {
-      setState(isInState);
-      setClassName(_className);
-      setElement(_element);
-    }
-
-    function setClassName(_className) {
-      className = _className ? _className : DEFAULT_NAME;
-    }
-
-    function setState(isInState) {
-        currentState = isInState ? animatorStates.IN : animatorStates.OUT;
-    }
-
-    function setElement(_element) {
-      element = _element;
+    function setState(_state) {
+      state = _state;
     }
 
     return {
-      initState: function(isInState, _element, _className) {
-        setParams(isInState, _element, _className);
-        //animatorClass.init(_element, _className);
-        addClassWithState();
+      init: function(_state, element, className) {
+        setState(_state);
+        animatorState.set(_state);
+        animatorDuration.init(element);
+        animatorClassName.init(className);
+        animatorClass.init(element);
       },
-      run: function(isInState) {
-        setState(isInState);
+      run: function(_state) {
+        setState(_state);
+        animatorState.set(_state);
         sequence();
       }
     };

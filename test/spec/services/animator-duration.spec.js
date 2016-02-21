@@ -26,19 +26,19 @@ describe('Service: animatorDuration', function () {
     describe('transition', function () {
       describe('when no transition property', function () {
         it('should return 0', function () {
-          expect(animatorDuration.get(new ElementBuilder().build())).toBe(0);
+          whenInitElementExpectTime(new ElementBuilder().build(), 0);
         });
       });
 
       describe('when duration property is 1s', function () {
         it('should return 1000', function () {
-          expect(animatorDuration.get(new ElementBuilder().withTransitionDuration().build())).toBe(1000);
+          whenInitElementExpectTime(new ElementBuilder().withTransitionDuration().build(), 1000);
         });
       });
 
       describe('when delay and transition duration is 1s', function () {
         it('should return 1000', function () {
-          expect(animatorDuration.get(new ElementBuilder().withTransitionDuration().withTransitionDelay().build())).toBe(2000);
+          whenInitElementExpectTime(new ElementBuilder().withTransitionDuration().withTransitionDelay().build(), 2000);
         });
       });
     });
@@ -46,13 +46,13 @@ describe('Service: animatorDuration', function () {
     describe('animation', function () {
       describe('when duration property is 1s', function () {
         it('should return 1000', function () {
-          expect(animatorDuration.get(new ElementBuilder().withAnimationDuration().build())).toBe(1000);
+          whenInitElementExpectTime(new ElementBuilder().withAnimationDuration().build(), 1000);
         });
       });
 
       describe('when delay and transition duration is 1s', function () {
         it('should return 1000', function () {
-          expect(animatorDuration.get(new ElementBuilder().withAnimationDuration().withAnimationDelay().build())).toBe(2000);
+          whenInitElementExpectTime(new ElementBuilder().withAnimationDuration().withAnimationDelay().build(), 2000);
         });
       });
     });
@@ -67,13 +67,13 @@ describe('Service: animatorDuration', function () {
         });
 
         it('should return transition duration', function () {
-          expect(animatorDuration.get(transitionDurationBigger.build())).toBe(2000);
+          whenInitElementExpectTime(transitionDurationBigger.build(), 2000);
         });
 
         describe('when animation delay+duration is bigger than transition delay+duration', function () {
 
           it('should return transition duration', function () {
-            expect(animatorDuration.get(transitionDurationBigger.withAnimationDelay('3s').build())).toBe(4000);
+            whenInitElementExpectTime(transitionDurationBigger.withAnimationDelay('3s').build(), 4000);
           });
 
         });
@@ -89,14 +89,14 @@ describe('Service: animatorDuration', function () {
         });
 
         it('should return animation duration', function () {
-          expect(animatorDuration.get(animationDurationBigger.build())).toBe(2000);
+          whenInitElementExpectTime(animationDurationBigger.build(), 2000);
         });
 
 
         describe('when transition delay+duration is bigger than animation delay+duration', function () {
 
           it('should return transition duration', function () {
-            expect(animatorDuration.get(animationDurationBigger.withTransitionDelay('3s').build())).toBe(4000);
+            whenInitElementExpectTime(animationDurationBigger.withTransitionDelay('3s').build(), 4000);
           });
 
         });
@@ -109,6 +109,10 @@ describe('Service: animatorDuration', function () {
 
   });
 
+  function whenInitElementExpectTime(element, time) {
+    animatorDuration.init(element);
+    expect(animatorDuration.get()).toBe(time);
+  }
 
   function ElementBuilder() {
     var element = angular.element('<div></div>');

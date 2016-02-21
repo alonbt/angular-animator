@@ -7,16 +7,16 @@
  * # animator
  */
 angular.module('angularAnimator')
-  .directive('animator', function (animatorSequence) {
+  .directive('animator', function (animatorSequence, animatorStatesMap) {
     return {
       restrict: 'A',
       link: function postLink(scope, element, attrs) {
-        animatorSequence.initState(false, element, 'my-class');
+        animatorSequence.init(animatorStatesMap.OUT, element, 'my-class');
         scope.$watch(attrs.animator, function (newValue, oldValue) {
           if (!newValue && !oldValue) {
             return;
           }
-          animatorSequence.run(newValue, element);
+          animatorSequence.run(newValue ? animatorStatesMap.IN : animatorStatesMap.OUT, element);
         });
       }
     };

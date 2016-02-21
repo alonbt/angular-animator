@@ -92,14 +92,14 @@ body {
 
 .my-class-out {
   display: none;
+  background: transparent;
+  opacity: 0;
+  height: 0;
 }
 
 .my-class-between {
   display: block;
-  background: transparent;
-  opacity: 0;
-  height: 0;
-  transition: all 2s linear;
+  transition: all 1s linear;
 }
 
 .my-class-between-out {

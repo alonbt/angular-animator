@@ -8,31 +8,28 @@
  * Service in the angularAnimatorApp.
  */
 angular.module('angularAnimator')
-  .service('animatorClass', function (animatorStates) {
-    var element, className;
+  .service('animatorClass', function (animatorStatesMap, animatorState, animatorClassName) {
 
-    function getOppositeState(state) {
-      return state === animatorStates.IN ? animatorStates.OUT : animatorStates.IN;
-    }
+    var element;
 
     return {
-      init: function (_element, _className) {
+      init: function (_element) {
         element = _element;
-        className = _className;
+        this.addState();
       },
-      addBetweenClassesWithState: function (state) {
-        element.addClass(className + '-between');
-        element.addClass(className + '-between-' + state);
+      addStateBetween: function () {
+        element.addClass(animatorClassName.getBetween());
+        element.addClass(animatorClassName.getBetweenState());
       },
-      removeBetweenClassesWithState: function (state) {
-        element.removeClass(className + '-between');
-        element.removeClass(className + '-between-' + state);
+      removeStateBetween: function () {
+        element.removeClass(animatorClassName.getBetween());
+        element.removeClass(animatorClassName.getBetweenState());
       },
-      addClassWithState: function (state) {
-        element.addClass(className + '-' + state);
+      addState: function () {
+        element.addClass(animatorClassName.getState());
       },
-      removeClassWithOppositeState: function (state) {
-        element.removeClass(className + '-' + getOppositeState(state));
+      removeOppositeState: function () {
+        element.removeClass(animatorClassName.getOppositeState());
       }
     };
   });

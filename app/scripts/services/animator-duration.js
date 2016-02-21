@@ -52,8 +52,10 @@ angular.module('angularAnimator')
     }
 
     return {
-      get: function (_element) {
+      init: function (_element) {
         element = _element;
+      },
+      get: function () {
         return getDuration();
       }
     };
