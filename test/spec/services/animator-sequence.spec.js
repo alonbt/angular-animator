@@ -13,7 +13,8 @@ describe('Service: animatorSequence', function () {
     animatorSequence = _animatorSequence_;
   }));
 
-  beforeEach(inject(function(animatorDuration) {
+  beforeEach(inject(function(animatorDuration, animatorClass) {
+    animatorClass.init = jasmine.createSpy('init');
     animatorDuration.get = jasmine.createSpy('get');
   }));
 
@@ -28,6 +29,7 @@ describe('Service: animatorSequence', function () {
         it('should have animator-in class', function () {
           createElement(1000);
           initState(true, className);
+          //expect(animatorClass.init).toHaveBeenCalledWith(element, className);
           expectToHaveClasses(className + '-in');
         });
       });

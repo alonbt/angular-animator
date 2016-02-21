@@ -8,14 +8,9 @@
  * Service in the angularAnimatorApp.
  */
 angular.module('angularAnimator')
-  .service('animatorSequence', function (animatorDuration, $timeout) {
+  .service('animatorSequence', function (animatorDuration, animatorStates, animatorClass, $timeout) {
 
     var element, currentState, className;
-
-    var states = {
-      IN: 'in',
-      OUT: 'out'
-    };
 
     var DEFAULT_NAME = 'animator';
 
@@ -38,7 +33,7 @@ angular.module('angularAnimator')
     }
 
     function getOppositeState(state) {
-      return state === states.IN ? states.OUT : states.IN;
+      return state === animatorStates.IN ? animatorStates.OUT : animatorStates.IN;
     }
 
 
@@ -78,7 +73,7 @@ angular.module('angularAnimator')
     }
 
     function setState(isInState) {
-      currentState = isInState ? states.IN : states.OUT;
+        currentState = isInState ? animatorStates.IN : animatorStates.OUT;
     }
 
     function setElement(_element) {
@@ -88,6 +83,7 @@ angular.module('angularAnimator')
     return {
       initState: function(isInState, _element, _className) {
         setParams(isInState, _element, _className);
+        //animatorClass.init(_element, _className);
         addClassWithState();
       },
       run: function(isInState) {
