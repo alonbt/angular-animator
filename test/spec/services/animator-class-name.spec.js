@@ -35,6 +35,11 @@ describe('Service: animatorClassName', function () {
     it('get opposite class name', function () {
       expect(animatorClassName.getOppositeState()).toBe('some-class-name-opposite-state');
     });
+
+    it('get opposite between class name', function () {
+      expect(animatorClassName.getBetweenOppositeState()).toBe('some-class-name-between-opposite-state');
+    });
+
   });
 
   describe('init without className', function () {

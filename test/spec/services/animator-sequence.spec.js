@@ -20,7 +20,9 @@ describe('Service: animatorSequence', function () {
     spyOn(animatorDuration, 'get').and.returnValue(animationTime);
     spyOn(animatorDuration, 'init');
     spyOn(animatorState, 'set');
+    spyOn(animatorState, 'get');
     spyOn(animatorState, 'getInProgress').and.returnValue(undefined);
+    spyOn(animatorState, 'clearInProgress');
   }));
 
   it('should do something', function () {
@@ -53,26 +55,30 @@ describe('Service: animatorSequence', function () {
     describe('run IN sequence', function () {
       beforeEach(inject(function (animatorState) {
         animatorState.set.calls.reset();
-        animatorSequence.run(animatorStatesMap.IN);
+        run(animatorStatesMap.IN);
       }));
 
       it('should set animatorState', inject(function (animatorState) {
         expect(animatorState.set).toHaveBeenCalledWith(animatorStatesMap.IN);
       }));
 
+      it('should not clearInProgress', inject(function (animatorState) {
+        expect(animatorState.clearInProgress).not.toHaveBeenCalled();
+      }));
+
       describe('start sequence', function () {
 
-        it('should set state', inject(function (animatorState) {
-          expect(animatorState.set).toHaveBeenCalledWith(animatorStatesMap.IN);
-        }));
-
         it('should add start sequence classes ', function () {
-          expect(animatorClass.addStateBetween).toHaveBeenCalledWith();
+          expect(animatorClass.addBetween).toHaveBeenCalledWith();
+        });
+
+        it('should not call switchBetweenState', function () {
+          expect(animatorClass.switchBetweenState).not.toHaveBeenCalled();
         });
 
         describe('when rerun OUT sequence', function () {
           beforeEach(inject(function (animatorState) {
-            animatorClass.addStateBetween.calls.reset();
+            animatorClass.addBetween.calls.reset();
             animatorState.set.calls.reset();
             animatorSequence.run(animatorStatesMap.OUT);
           }));
@@ -87,8 +93,7 @@ describe('Service: animatorSequence', function () {
          }));
 
         it('should add between sequence classes ', inject(function (animatorDuration) {
-          expect(animatorClass.addState).toHaveBeenCalledWith();
-          expect(animatorClass.removeOppositeState).toHaveBeenCalledWith();
+          expect(animatorClass.switchState).toHaveBeenCalledWith();
           expect(animatorDuration.get).toHaveBeenCalledWith();
         }));
       });
@@ -100,15 +105,19 @@ describe('Service: animatorSequence', function () {
         }));
 
         it('should add end sequence classes', function () {
-          expect(animatorClass.removeStateBetween).toHaveBeenCalledWith();
+          expect(animatorClass.removeBetween).toHaveBeenCalledWith();
         });
+
       });
     });
 
     describe('rerun OUT when already OUT inProgress', function () {
       beforeEach(inject(function (animatorState) {
+        //animatorState.getInProgress.and.returnValue(animatorStatesMap.OUT);
+        run(animatorStatesMap.OUT);
         animatorState.set.calls.reset();
-        animatorState.getInProgress.and.returnValue(animatorStatesMap.OUT);
+        animatorClass.addBetween.calls.reset();
+        setState(animatorStatesMap.OUT);
         animatorSequence.run(animatorStatesMap.OUT);
       }));
 
@@ -116,29 +125,99 @@ describe('Service: animatorSequence', function () {
         expect(animatorState.set).not.toHaveBeenCalled();
       }));
 
-      it('should not addStateBetween', inject(function () {
-        expect(animatorClass.addStateBetween).not.toHaveBeenCalled();
+      it('should not addBetween', inject(function () {
+        expect(animatorClass.addBetween).not.toHaveBeenCalled();
       }));
+
     });
 
     describe('rerun IN when already OUT inProgress', function () {
       beforeEach(inject(function (animatorState) {
         animatorState.set.calls.reset();
-        animatorClass.removeStateBetween.and.callFake(function () {
-          expect(animatorState.set.calls.count()).toBe(0);
+
+        run(animatorStatesMap.OUT);
+        animatorClass.switchBetweenState.calls.reset();
+        animatorClass.addBetween.calls.reset();
+        run(animatorStatesMap.IN);
+      }));
+
+      it('should removeBetween before new state has been set', inject(function () {
+        expect(animatorClass.addBetween).not.toHaveBeenCalled();
+      }));
+
+      it('should removeBetween before new state has been set', inject(function () {
+        expect(animatorClass.switchBetweenState).toHaveBeenCalled();
+      }));
+
+      it('should not run animatorClass.switchState', inject(function () {
+        animatorClass.switchState.calls.reset();
+        flushToBetweenSequense();
+        expect(animatorClass.switchState).not.toHaveBeenCalled();
+        flushToEndSequence();
+        expect(animatorClass.removeBetween).not.toHaveBeenCalledWith();
+
+      }));
+
+      describe('when animation ends', function () {
+        beforeEach(function () {
+          flushToBetweenSequense();
+          flushToEndSequence();
         });
-        animatorState.getInProgress.and.returnValue(animatorStatesMap.OUT);
-        animatorSequence.run(animatorStatesMap.IN);
-      }));
 
-      it('should set IN state', inject(function (animatorState) {
-        expect(animatorState.set).toHaveBeenCalledWith(animatorStatesMap.IN);
-      }));
-
-      it('should removeStateBetween before new state has been set', inject(function () {
-        expect(animatorClass.removeStateBetween).toHaveBeenCalled();
-      }));
+        it('should addBetween when running again', function () {
+          animatorClass.addBetween.calls.reset();
+          run(animatorStatesMap.OUT);
+          expect(animatorClass.addBetween).toHaveBeenCalledWith();
+        });
+      });
     });
+
+    describe('rerun OUT when already IN inProgress after first timeout', function () {
+      beforeEach(inject(function ($timeout, animatorState) {
+        run(animatorStatesMap.IN);
+        flushToBetweenSequense();
+        //animatorClass.addBetween.calls.reset();
+        animatorClass.addBetween.calls.reset();
+        run(animatorStatesMap.OUT);
+      }));
+
+
+      it('should not call removeBetween', inject(function () {
+        animatorClass.removeBetween.calls.reset();
+        flushToEndSequence();
+        expect(animatorClass.removeBetween).not.toHaveBeenCalled();
+      }));
+
+      it('should call switchBetweenState', inject(function () {
+        expect(animatorClass.switchBetweenState).toHaveBeenCalledWith();
+      }));
+
+      it('should call switchState', inject(function () {
+        animatorClass.switchState.calls.reset();
+        flushToBetweenSequense();
+        expect(animatorClass.switchState).toHaveBeenCalledWith();
+      }));
+
+      describe('when second run finished', function () {
+        beforeEach(function () {
+          flushToBetweenSequense();
+          flushToEndSequence();
+        });
+
+        it('should call switchState', inject(function () {
+          expect(animatorClass.removeBetween).toHaveBeenCalledWith();
+        }));
+
+        it('should addBetween when running again', function () {
+          animatorClass.addBetween.calls.reset();
+          run(animatorStatesMap.IN);
+          expect(animatorClass.addBetween).toHaveBeenCalledWith();
+        });
+
+      });
+
+    });
+
   });
 
   it('should not init animatorClass before animatorClassName', inject(function (animatorClass, animatorClassName) {
@@ -158,11 +237,34 @@ describe('Service: animatorSequence', function () {
     });
   }
 
+  function setState(state) {
+    inject(function (animatorState) {
+      animatorState.get.and.returnValue(state);
+    })
+  }
+
+  function run(state) {
+    setState(state === animatorStatesMap.IN ? animatorStatesMap.OUT : animatorStatesMap.IN);
+    animatorSequence.run(state);
+  }
+
+  function flushToBetweenSequense() {
+    inject(function ($timeout) {
+      $timeout.flush(0);
+    });
+  }
+
+  function flushToEndSequence() {
+    inject(function ($timeout) {
+      $timeout.flush(animationTime);
+    });
+  }
+
   function spyOnAnimatorClass(animatorClass) {
     spyOn(animatorClass, 'init');
-    spyOn(animatorClass, 'addStateBetween');
-    spyOn(animatorClass, 'removeStateBetween');
-    spyOn(animatorClass, 'addState');
-    spyOn(animatorClass, 'removeOppositeState');
+    spyOn(animatorClass, 'addBetween');
+    spyOn(animatorClass, 'removeBetween');
+    spyOn(animatorClass, 'switchState');
+    spyOn(animatorClass, 'switchBetweenState');
   }
 });

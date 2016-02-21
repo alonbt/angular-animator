@@ -33,26 +33,34 @@ describe('Service: animatorClass', function () {
 
   describe('when add/remove between-classes', function () {
     it('should add and remove between-classes', function () {
-      animatorClass.addStateBetween();
+      animatorClass.addBetween();
       expect(element).toHaveClass('class-between');
       expect(element).toHaveClass('class-between-state');
 
-      animatorClass.removeStateBetween();
+      animatorClass.removeBetween();
       expect(element).not.toHaveClass('class-between');
       expect(element).not.toHaveClass('class-between-state');
     });
   });
 
-  describe('when add/remove state classes', function () {
-    it('should add and remove state class', function () {
-      animatorClass.addState();
-      expect(element).toHaveClass('class-state');
-    });
+  describe('when switch state', function () {
 
-    it('should remove the opposite state class', function () {
+    it('should add the state and remove the opposite state', function () {
       element.addClass('class-opposite-state');
-      animatorClass.removeOppositeState();
+      animatorClass.switchState();
+      expect(element).toHaveClass('class-state');
       expect(element).not.toHaveClass('class-opposite-state');
+
+    });
+  });
+
+  describe('switch between state', function () {
+    it('should add the state and remove the opposite between state', function () {
+      element.addClass('class-between-opposite-state');
+      animatorClass.switchBetweenState();
+      expect(element).toHaveClass('class-between-state');
+      expect(element).not.toHaveClass('class-between-opposite-state');
+
     });
   });
 
@@ -64,6 +72,7 @@ describe('Service: animatorClass', function () {
   function spyOnAnimatorClassName() {
     spyOn(animatorClassName, 'getBetween').and.returnValue('class-between');
     spyOn(animatorClassName, 'getBetweenState').and.returnValue('class-between-state');
+    spyOn(animatorClassName, 'getBetweenOppositeState').and.returnValue('class-between-opposite-state');
     spyOn(animatorClassName, 'getState').and.returnValue('class-state');
     spyOn(animatorClassName, 'getOppositeState').and.returnValue('class-opposite-state');
   }

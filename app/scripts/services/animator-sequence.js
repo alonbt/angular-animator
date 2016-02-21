@@ -10,35 +10,81 @@
 angular.module('angularAnimator')
   .service('animatorSequence', function (animatorDuration, animatorStatesMap, animatorClass, $timeout, animatorState, animatorClassName) {
 
+    var sequenceCountMap = {
+      start: 0,
+      between: 0
+    };
 
-    function sequence() {
-      startSequence();
-      betweenSequence(function () {
-        endSequence();
+    var timeoutMap = {};
+
+    function clearSequenceMap() {
+      sequenceCountMap.start = 0;
+      sequenceCountMap.between = 0;
+    }
+
+    function sequenceFlow() {
+      sequence.start();
+      sequence.between(function () {
+        sequence.end(clearSequenceMap);
       });
     }
 
-    function startSequence() {
-      animatorClass.addStateBetween();
+    // In case second sequence start after START of first sequence
+    var revertStartSequence = {
+      start: function () {
+        $timeout.cancel(timeoutMap.between);
+        animatorClass.switchBetweenState();
+      },
+      between: clearSequenceMap
+    };
+
+    // In case second sequence start after BETWEEN of first sequence
+    var revertBetweenSequence = {
+      start: function () {
+        $timeout.cancel(timeoutMap.end);
+        animatorClass.switchBetweenState();
+      },
+      between: function (endCallback) {
+        animatorClass.switchState();
+        endCallback(clearSequenceMap);
+      }
+    };
+
+    function isBetweenAlreadRunning() {
+      return sequenceCountMap.between > 0;
     }
 
-    function stopStartSequence() {
-      animatorClass.removeStateBetween();
-    }
-
-    function betweenSequence(callback) {
-      $timeout(function () {
-        animatorClass.addState();
-        animatorClass.removeOppositeState();
-        callback();
-      }, 0);
-    }
-
-    function endSequence() {
-      $timeout(function () {
-        animatorClass.removeStateBetween();
-      }, animatorDuration.get());
-    }
+    var sequence = {
+      start: function () {
+        if (isBetweenAlreadRunning()) {
+          revertBetweenSequence.start();
+        } else if (sequenceCountMap.start > 0) {
+          revertStartSequence.start();
+        } else {
+          animatorClass.addBetween();
+        }
+        sequenceCountMap.start++;
+      },
+      between: function (endCallback) {
+        timeoutMap.between = $timeout(function () {
+          if (isBetweenAlreadRunning()) {
+            revertBetweenSequence.between(sequence.end);
+          } else if (sequenceCountMap.start > 1) {
+            revertStartSequence.between();
+          } else {
+            animatorClass.switchState();
+            sequenceCountMap.between++;
+            endCallback();
+          }
+        }, 0);
+      },
+      end: function (postEndcallback) {
+        timeoutMap.end = $timeout(function () {
+          animatorClass.removeBetween();
+          postEndcallback();
+        }, animatorDuration.get());
+      }
+    };
 
     function initServices(element, className) {
       animatorDuration.init(element);
@@ -53,15 +99,13 @@ angular.module('angularAnimator')
 
       },
       run: function(_state) {
-        var inProgress = animatorState.getInProgress();
-        if (inProgress && inProgress === _state) {
+
+        if (_state === animatorState.get()) {
           return;
         }
-        if (animatorState.getInProgress()) {
-          stopStartSequence();
-        }
+
         animatorState.set(_state);
-        sequence();
+        sequenceFlow();
       }
     };
   });

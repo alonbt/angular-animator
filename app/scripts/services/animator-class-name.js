@@ -20,6 +20,9 @@ angular.module('angularAnimator')
       getBetweenState: function () {
         return this.getBetween() + '-' + animatorState.get();
       },
+      getBetweenOppositeState: function () {
+        return this.getBetween() + '-' + animatorState.getOpposite();
+      },
       getState: function () {
         return className + '-' + animatorState.get();
       },

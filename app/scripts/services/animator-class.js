@@ -12,23 +12,29 @@ angular.module('angularAnimator')
 
     var element;
 
+    function addState() {
+      element.addClass(animatorClassName.getState());
+    }
+
     return {
       init: function (_element) {
         element = _element;
-        this.addState();
+        addState();
       },
-      addStateBetween: function () {
+      addBetween: function () {
         element.addClass(animatorClassName.getBetween());
         element.addClass(animatorClassName.getBetweenState());
       },
-      removeStateBetween: function () {
+      removeBetween: function () {
         element.removeClass(animatorClassName.getBetween());
         element.removeClass(animatorClassName.getBetweenState());
       },
-      addState: function () {
-        element.addClass(animatorClassName.getState());
+      switchBetweenState: function () {
+        element.addClass(animatorClassName.getBetweenState());
+        element.removeClass(animatorClassName.getBetweenOppositeState());
       },
-      removeOppositeState: function () {
+      switchState: function () {
+        addState();
         element.removeClass(animatorClassName.getOppositeState());
       }
     };
