@@ -10,36 +10,62 @@
 angular.module('angularAnimator')
   .service('animatorSequence', function (animatorDuration, animatorStatesMap, animatorClass, $timeout, animatorState, animatorClassName) {
 
-    var sequenceCountMap = {
-      start: 0,
-      between: 0
+    var sequenceAlreadyRunning = {
+      start: false,
+      between: false
     };
 
     var timeoutMap = {};
 
-    function clearSequenceMap() {
-      sequenceCountMap.start = 0;
-      sequenceCountMap.between = 0;
-    }
-
     function sequenceFlow() {
       sequence.start();
-      sequence.between(function () {
-        sequence.end(clearSequenceMap);
-      });
+      if (sequenceAlreadyRunning.start) {
+        sequence.betweenTimeout(function () {
+          sequence.between(function () {
+            sequence.end();
+          });
+        });
+      }
     }
 
+    var sequence = {
+      start: function () {
+        if (sequenceAlreadyRunning.between) {
+          SecondSequenceFromBetween.start();
+        } else if (sequenceAlreadyRunning.start) {
+          SecondSequenceFromStart.start();
+        } else {
+          firstSequence.start();
+        }
+      },
+      betweenTimeout: function (betweenCallback) {
+        timeoutMap.between = $timeout(function () {
+          betweenCallback()
+        }, 0);
+      },
+      between: function (endCallback) {
+        if (sequenceAlreadyRunning.between) {
+          SecondSequenceFromBetween.between(firstSequence.end);
+        } else {
+          firstSequence.between(endCallback)
+        }
+      },
+      end: function () {
+        firstSequence.end(clearSequenceMap);
+      }
+    };
+
     // In case second sequence start after START of first sequence
-    var revertStartSequence = {
+    var SecondSequenceFromStart = {
       start: function () {
         $timeout.cancel(timeoutMap.between);
         animatorClass.switchBetweenState();
-      },
-      between: clearSequenceMap
+        sequenceAlreadyRunning.start = false;
+      }
     };
 
     // In case second sequence start after BETWEEN of first sequence
-    var revertBetweenSequence = {
+    var SecondSequenceFromBetween = {
       start: function () {
         $timeout.cancel(timeoutMap.end);
         animatorClass.switchBetweenState();
@@ -50,33 +76,15 @@ angular.module('angularAnimator')
       }
     };
 
-    function isBetweenAlreadRunning() {
-      return sequenceCountMap.between > 0;
-    }
-
-    var sequence = {
+    var firstSequence = {
       start: function () {
-        if (isBetweenAlreadRunning()) {
-          revertBetweenSequence.start();
-        } else if (sequenceCountMap.start > 0) {
-          revertStartSequence.start();
-        } else {
-          animatorClass.addBetween();
-        }
-        sequenceCountMap.start++;
+        animatorClass.addBetween();
+        sequenceAlreadyRunning.start = true;
       },
       between: function (endCallback) {
-        timeoutMap.between = $timeout(function () {
-          if (isBetweenAlreadRunning()) {
-            revertBetweenSequence.between(sequence.end);
-          } else if (sequenceCountMap.start > 1) {
-            revertStartSequence.between();
-          } else {
-            animatorClass.switchState();
-            sequenceCountMap.between++;
-            endCallback();
-          }
-        }, 0);
+        animatorClass.switchState();
+        sequenceAlreadyRunning.between = true;
+        endCallback();
       },
       end: function (postEndcallback) {
         timeoutMap.end = $timeout(function () {
@@ -92,6 +100,15 @@ angular.module('angularAnimator')
       animatorClass.init(element);
     }
 
+    function clearSequenceMap() {
+      sequenceAlreadyRunning.start = false;
+      sequenceAlreadyRunning.between = false;
+    }
+
+    function isStateChange(_state) {
+      return _state !== animatorState.get();
+    }
+
     return {
       init: function(_state, element, className) {
         animatorState.set(_state);
@@ -100,7 +117,7 @@ angular.module('angularAnimator')
       },
       run: function(_state) {
 
-        if (_state === animatorState.get()) {
+        if (!isStateChange(_state)) {
           return;
         }
 
