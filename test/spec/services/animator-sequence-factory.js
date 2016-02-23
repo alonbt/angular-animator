@@ -26,7 +26,7 @@ describe('Service: animatorSequenceBuilder', function () {
 
   describe('when adding step', function () {
     beforeEach(function () {
-      seq.step(callback);
+      seq.step(function() {console.log('yay'); callback();});
     });
 
     it('should run step', function () {
@@ -48,6 +48,23 @@ describe('Service: animatorSequenceBuilder', function () {
       timeout(duration);
       expect(secondCallback).toHaveBeenCalled();
     });
+  });
+
+  describe('next', function () {
+    beforeEach(function () {
+      seq.step(callback);
+      seq.step(secondCallback);
+    });
+
+    it('should call first step', function () {
+      next();
+      expect(callback).toHaveBeenCalled();
+    });
+
+    //it('should not call second step', function () {
+    //  next();
+    //  expect(secondCallback).not.toHaveBeenCalled();
+    //});
   });
 
   describe('when adding test with timeFunction', function () {
@@ -124,6 +141,14 @@ describe('Service: animatorSequenceBuilder', function () {
     inject(function ($rootScope) {
       seq = customSeq || seq;
       seq.run();
+      $rootScope.$apply();
+    });
+  }
+
+  function next(customSeq) {
+    inject(function ($rootScope) {
+      seq = customSeq || seq;
+      seq.next();
       $rootScope.$apply();
     });
   }

@@ -12,42 +12,71 @@ angular.module('angularAnimator')
 
     function getTime(time) {
       return typeof time === 'function' ? time() : time;
-
     }
 
     function AnimatorSequence () {
 
       var stop = false;
+      var previousDeffered;
+      var defferedArray = [];
 
-      function createTimeoutFunction (callback, time) {
-        return function () {
-
-          var deffered2 = $q.defer();
-          var promise2 = deffered2.promise;
-          promise2.then(callback);
-          $timeout(function () {
-            !stop ? deffered2.resolve() : deffered2.reject();
-          }, time);
-          return deffered2.promise;
+      function resolve(deffered) {
+        if (!stop) {
+          deffered.resolve();
         }
       }
 
-      var deffered = $q.defer();
-      var promise = deffered.promise;
-      this.step = function (callback, time) {
-        if (time) {
-          callback = time ? createTimeoutFunction(callback, getTime(time)) : callback;
+      function createAsyncFunc(callback, time, deffered) {
+        return function () {
+          deffered.promise.then(callback);
+          $timeout(function () {
+            resolve(deffered);
+          }, getTime(time));
+          return deffered.promise;
         }
+      }
+
+      function createSyncFunc(callback, deffered) {
+        return function () {
+          deffered.promise.then(callback);
+          resolve(deffered);
+          return  deffered.promise;
+        }
+      }
+
+      function createPromise (callback, time) {
+        var deffered = $q.defer();
+        defferedArray.push(previousDeffered);
+        previousDeffered = deffered;
+        return time ? createAsyncFunc(callback, time, deffered) : createSyncFunc(callback, deffered);
+      }
+
+      var deffered = $q.defer();
+      previousDeffered = deffered;
+      var promise = deffered.promise;
+
+
+      this.step = function (callback, time) {
+        callback = createPromise(callback, time);
         promise = promise.then(callback);
         return this;
       };
 
       this.run = function () {
-        if (!stop) {
-          deffered.resolve();
-        }
+        console.log(defferedArray.length);
+        resolve(deffered);
+
+        //while (defferedArray.length && !stop) {
+        //  resolve(defferedArray.shift());
+        //}
+
         return this;
-      }
+      };
+
+      this.next = function () {
+        resolve(defferedArray.shift());
+        return this;
+      };
 
       this.stop = function () {
         stop = true;
