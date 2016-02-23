@@ -10,78 +10,80 @@
 angular.module('angularAnimator')
   .factory('AnimatorSequence', function ($timeout, animatorDuration, $q) {
 
-    function getTime(time) {
-      return typeof time === 'function' ? time() : time;
-    }
-
     function AnimatorSequence () {
 
+      var deferArray = [];
+      var nextDeferred;
       var stop = false;
-      var previousDeffered;
-      var defferedArray = [];
 
-      function resolve(deffered) {
-        if (!stop) {
-          deffered.resolve();
-        }
+      var defer = $q.defer();
+      var promise = defer.promise;
+
+      function getTime(time) {
+        return typeof time === 'function' ? time() : time;
       }
 
-      function createAsyncFunc(callback, time, deffered) {
+      function delay(time) {
         return function () {
-          deffered.promise.then(callback);
-          $timeout(function () {
-            resolve(deffered);
-          }, getTime(time));
-          return deffered.promise;
+          var defer = $q.defer();
+          $timeout(function() {
+            defer.resolve();
+          }, time);
+          return defer.promise;
         }
       }
 
-      function createSyncFunc(callback, deffered) {
-        return function () {
-          deffered.promise.then(callback);
-          resolve(deffered);
-          return  deffered.promise;
+      function getDelayPromise (time) {
+        return promise.then(delay(getTime(time)));
+      }
+
+      function getCallbackPromise (callback) {
+        return promise.then(function () {
+          if (!stop) {
+            callback();
+          }
+          return getNextPromise();
+        });
+      }
+
+      function getNextPromise() {
+        return nextDeferred ? nextDeferred.promise : undefined;
+      }
+
+      function createStepPromise(callback, time) {
+        deferArray.push(defer);
+        if (time) {
+          promise = getDelayPromise(time);
         }
+        promise = getCallbackPromise(callback);
+        defer = $q.defer();
       }
-
-      function createPromise (callback, time) {
-        var deffered = $q.defer();
-        defferedArray.push(previousDeffered);
-        previousDeffered = deffered;
-        return time ? createAsyncFunc(callback, time, deffered) : createSyncFunc(callback, deffered);
-      }
-
-      var deffered = $q.defer();
-      previousDeffered = deffered;
-      var promise = deffered.promise;
-
 
       this.step = function (callback, time) {
-        callback = createPromise(callback, time);
-        promise = promise.then(callback);
+        createStepPromise(callback, time);
         return this;
       };
 
       this.run = function () {
-        console.log(defferedArray.length);
-        resolve(deffered);
-
-        //while (defferedArray.length && !stop) {
-        //  resolve(defferedArray.shift());
-        //}
-
+        while (deferArray.length) {
+          this.next();
+        }
         return this;
       };
 
       this.next = function () {
-        resolve(defferedArray.shift());
+        if (deferArray.length) {
+          var currentlyDeffered = deferArray.shift();
+          nextDeferred = deferArray[0];
+          currentlyDeffered.resolve();
+        }
         return this;
       };
 
       this.stop = function () {
         stop = true;
       };
-    }
+    };
 
     return AnimatorSequence;
 

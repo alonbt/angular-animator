@@ -13,9 +13,9 @@ describe('Service: animatorSequenceBuilder', function () {
   // instantiate service
   var AnimatorSequence;
   beforeEach(inject(function (_AnimatorSequence_, animatorDuration) {
-    AnimatorSequence = _AnimatorSequence_;    callback = jasmine.createSpy('callback').and.returnValue(1);
-    secondCallback = jasmine.createSpy('secondCallback').and.returnValue(2);
-    thirdCallback = jasmine.createSpy('thirdCallback').and.returnValue(3);
+    AnimatorSequence = _AnimatorSequence_;    callback = jasmine.createSpy('callback');
+    secondCallback = jasmine.createSpy('secondCallback');
+    thirdCallback = jasmine.createSpy('thirdCallback');
     seq = new AnimatorSequence();
   }));
 
@@ -26,11 +26,11 @@ describe('Service: animatorSequenceBuilder', function () {
 
   describe('when adding step', function () {
     beforeEach(function () {
-      seq.step(function() {console.log('yay'); callback();});
+      seq.step(callback);
     });
 
-    it('should run step', function () {
-      run();
+    it('should run it on next', function () {
+      next();
       expect(callback).toHaveBeenCalled();
     })
   });
@@ -38,16 +38,52 @@ describe('Service: animatorSequenceBuilder', function () {
   describe('when adding 2 steps', function () {
     beforeEach(function () {
       seq.step(callback);
-      seq.step(secondCallback, duration);
+      seq.step(secondCallback);
     });
 
-    it('should run steps', function () {
-      run();
-      expect(callback).toHaveBeenCalled();
+    it('should not run 2nd step before 2nd next', function () {
+      next();
       expect(secondCallback).not.toHaveBeenCalled();
-      timeout(duration);
+    });
+
+    it('should run 2nd steps', function () {
+      next();
+      next();
       expect(secondCallback).toHaveBeenCalled();
     });
+  });
+
+  describe('when adding timeout step', function () {
+    beforeEach(function () {
+      seq.step(callback, 1000);
+    });
+
+    it('should not run before timeout', inject(function ($rootScope) {
+      next();
+      $rootScope.$apply();
+      expect(callback).not.toHaveBeenCalled();
+    }));
+
+    it('should not run after timeout', function () {
+      nextWithTimeout(seq, 1000);
+      expect(secondCallback).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when adding 2 timeout step', function () {
+    beforeEach(function () {
+      seq.step(callback, 1000);
+      seq.step(secondCallback, 2000);
+    });
+
+    it('should not run 2nd callback before timeout', inject(function ($rootScope) {
+      nextWithTimeout(seq, 1000);
+      expect(secondCallback).not.toHaveBeenCalled();
+      next();
+      $rootScope.$apply();
+      $rootScope.$apply();
+      expect(secondCallback).not.toHaveBeenCalled();
+    }));
   });
 
   describe('next', function () {
@@ -61,13 +97,13 @@ describe('Service: animatorSequenceBuilder', function () {
       expect(callback).toHaveBeenCalled();
     });
 
-    //it('should not call second step', function () {
-    //  next();
-    //  expect(secondCallback).not.toHaveBeenCalled();
-    //});
+    it('should not call second step', function () {
+      next();
+      expect(secondCallback).not.toHaveBeenCalled();
+    });
   });
 
-  describe('when adding test with timeFunction', function () {
+  describe('when adding step with timeFunction', function () {
     beforeEach(function () {
       seq.step(callback, function () { return duration });
     });
@@ -76,8 +112,7 @@ describe('Service: animatorSequenceBuilder', function () {
       run();
       timeout(duration);
       expect(callback).toHaveBeenCalled();
-      //expect(secondCallback).not.toHaveBeenCalled();
-      //expect(secondCallback).toHaveBeenCalled();
+
     });
   });
 
@@ -152,6 +187,17 @@ describe('Service: animatorSequenceBuilder', function () {
       $rootScope.$apply();
     });
   }
+
+  function nextWithTimeout(customSeq, time) {
+    inject(function ($rootScope, $timeout) {
+      seq = customSeq || seq;
+      seq.next();
+      $rootScope.$apply();
+      $timeout.flush(time);
+      $rootScope.$apply();
+    });
+  }
+
 
   function timeout(duration) {
     inject(function ($timeout) {
