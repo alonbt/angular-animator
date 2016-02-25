@@ -1,6 +1,6 @@
 'use strict';
 
-describe('Service: animatorSequence', function () {
+describe('Service: animatorSequenceManager', function () {
   // load the service's module
   var element, animationTime, animatorClass, animatorStatesMap;
   var className;
@@ -8,9 +8,9 @@ describe('Service: animatorSequence', function () {
 
 
   // instantiate service
-  var animatorSequence;
-  beforeEach(inject(function (_animatorSequence_) {
-    animatorSequence = _animatorSequence_;
+  var animatorSequenceManager;
+  beforeEach(inject(function (_animatorSequenceManager_) {
+    animatorSequenceManager = _animatorSequenceManager_;
   }));
 
   beforeEach(inject(function(animatorDuration, _animatorStatesMap_, animatorState, _animatorClass_) {
@@ -26,14 +26,14 @@ describe('Service: animatorSequence', function () {
   }));
 
   it('should do something', function () {
-    expect(!!animatorSequence).toBe(true);
+    expect(!!animatorSequenceManager).toBe(true);
   });
 
   describe('init with OUT', function () {
 
     beforeEach(function () {
       preInit();
-      animatorSequence.init(animatorStatesMap.OUT, element, className);
+      animatorSequenceManager.init(animatorStatesMap.OUT, element, className);
     });
 
     it('should init animatorClass', inject(function () {
@@ -80,7 +80,7 @@ describe('Service: animatorSequence', function () {
           beforeEach(inject(function (animatorState) {
             animatorClass.addBetween.calls.reset();
             animatorState.set.calls.reset();
-            animatorSequence.run(animatorStatesMap.OUT);
+            animatorSequenceManager.run(animatorStatesMap.OUT);
           }));
 
         });
@@ -118,7 +118,7 @@ describe('Service: animatorSequence', function () {
         animatorState.set.calls.reset();
         animatorClass.addBetween.calls.reset();
         setState(animatorStatesMap.OUT);
-        animatorSequence.run(animatorStatesMap.OUT);
+        animatorSequenceManager.run(animatorStatesMap.OUT);
       }));
 
       it('should not set state', inject(function (animatorState) {
@@ -225,7 +225,7 @@ describe('Service: animatorSequence', function () {
     animatorClassName.init.and.callFake(function () {
       expect(animatorClass.init.calls.count()).toBe(0);
     });
-    animatorSequence.init(animatorStatesMap.OUT, element, className);
+    animatorSequenceManager.init(animatorStatesMap.OUT, element, className);
   }));
 
   function preInit() {
@@ -245,7 +245,7 @@ describe('Service: animatorSequence', function () {
 
   function run(state) {
     setState(state === animatorStatesMap.IN ? animatorStatesMap.OUT : animatorStatesMap.IN);
-    animatorSequence.run(state);
+    animatorSequenceManager.run(state);
   }
 
   function flushToBetweenSequense() {

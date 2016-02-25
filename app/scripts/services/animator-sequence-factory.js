@@ -37,6 +37,10 @@ angular.module('angularAnimator')
         return promise.then(delay(getTime(time)));
       }
 
+      function getNextPromise() {
+        return nextDeferred ? nextDeferred.promise : undefined;
+      }
+
       function getCallbackPromise (callback) {
         return promise.then(function () {
           if (!stop) {
@@ -44,10 +48,6 @@ angular.module('angularAnimator')
           }
           return getNextPromise();
         });
-      }
-
-      function getNextPromise() {
-        return nextDeferred ? nextDeferred.promise : undefined;
       }
 
       function createStepPromise(callback, time) {

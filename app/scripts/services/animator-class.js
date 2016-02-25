@@ -28,6 +28,7 @@ angular.module('angularAnimator')
       removeBetween: function () {
         element.removeClass(animatorClassName.getBetween());
         element.removeClass(animatorClassName.getBetweenState());
+        element.removeClass(animatorClassName.getBetweenOppositeState());
       },
       switchBetweenState: function () {
         element.addClass(animatorClassName.getBetweenState());

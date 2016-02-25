@@ -41,6 +41,12 @@ describe('Service: animatorClass', function () {
       expect(element).not.toHaveClass('class-between');
       expect(element).not.toHaveClass('class-between-state');
     });
+
+    it('should remove class-between-opposite-state if exists', function () {
+      element.addClass('class-between-opposite-state');
+      animatorClass.removeBetween();
+      expect(element).not.toHaveClass('class-between-opposite-state');
+    })
   });
 
   describe('when switch state', function () {
